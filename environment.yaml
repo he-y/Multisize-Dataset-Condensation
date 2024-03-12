@@ -1,0 +1,17 @@
+name: mdc
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pip:
+    # PyTorch (GPU environment)
+    - torch
+    - torchvision
+    - torchaudio
+    - numpy
+    # experiment tracking (optional)
+    - aim
+    # IDC (ICML'22) dependencies
+    - efficientnet_pytorch
+    # DREAM (ICCV'23) dependencies
+    - fast_pytorch_kmeans
