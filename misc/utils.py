@@ -324,11 +324,6 @@ class Regularizer():
         self.args = args
         self.reg_list = [RegularizedIPC(i) for i in range(0, args.ipc + 1)] # zero is padded to align ipcx with index
         self.prev_ipcx_list = []
-
-        for ipcx, stop_it in zip(args.regularize, args.reg_quit):
-            self.reg_list[ipcx].regularize = True
-            self.reg_list[ipcx].iteration = stop_it
-
         self.ipcx_stage = self.split_stage()
         self.ipcx_bridge = []   # only available when args.num_stage > 1
 
@@ -433,25 +428,3 @@ class RegularizedIPC():
         self.iteration = iteration
         self.regularize = regularize
         self.keep_freeze = keep_freeze
-
-if __name__ == '__main__':
-    import argparse
-    args = argparse.Namespace()
-    args.ipc=10
-    args.regularize = [1, 3, 5, 7]
-    args.reg_quit = [1, 3, 5, 7]
-
-    # test QuitTracker
-    quit_tracker = Regularizer(args)
-    quit_tracker.print_status()
-    for it in range(20):
-        quit_tracker.update_status(it)
-        ipcx = quit_tracker.get_freeze_ipc()
-
-        if it == 15:
-            quit_tracker.freeze_ipcx(3, unfreeze=True)
-
-        for ot in range(100):
-            pass
-            
-        print(it, ipcx)

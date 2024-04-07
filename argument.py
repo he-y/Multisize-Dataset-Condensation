@@ -117,7 +117,7 @@ parser.add_argument('--batch_size', default=64, type=int, help='mini-batch size 
 parser.add_argument('--lr', default=0.01, type=float, help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float, help='weight decay')
-parser.add_argument('--seed', default=0, type=int, help='random seed for training')
+parser.add_argument('--seed', default=123, type=int, help='random seed for training')
 parser.add_argument('--pretrained', action='store_true')
 
 # Mixup
@@ -255,7 +255,7 @@ parser.add_argument('--start_idx', type=int, default=0, help='which idx to start
 
 # Regularization
 parser.add_argument('--adaptive_reg', type=str2bool, default=False, help='whether to adaptively regularize or not')
-parser.add_argument('--adaptive_period', type=int, default=2000, help='period for adaptive regularization')
+parser.add_argument('--adaptive_period', type=int, default=100, help='period for adaptive regularization')
 parser.add_argument('--adaptive_class_wise', action='store_true', help='whether to adaptively regularize in a class-wise or not (i.e., each class can make different decision)')
 
 parser.add_argument('--ipcy', type=int, default=-1, help='ipcy for testing')
@@ -418,7 +418,7 @@ if args.ipc > 0:
             args.idx_from, args.idx_to = f_list
             args.metric = 'mse'
 
-            if args.adaptive_period != 2000:
+            if args.adaptive_period != 100:
                 args.tag += f'_{args.adaptive_period}'
                 args.run_name += f'_{args.adaptive_period}'
             

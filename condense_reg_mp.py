@@ -236,7 +236,7 @@ class Synthesizer():
 
         train_dataset = TensorDataset(data_dec.cpu(), target_dec.cpu(), train_transform)
 
-        logger(f"Decode condensed data: {data.shape}")
+        logger(f"Decode condensed data: {data_dec.shape}")
         nw = 0 if not augment else args.workers
         train_loader = MultiEpochsDataLoader(train_dataset,
                                              batch_size=args.batch_size,
@@ -266,7 +266,8 @@ def load_resized_data(args, subclass_list):
     elif args.dataset == 'cifar100':
         train_dataset = datasets.CIFAR100(args.data_dir,
                                           train=True,
-                                          transform=transforms.ToTensor())
+                                          transform=transforms.ToTensor(),
+                                          download=True)
         normalize = transforms.Normalize(mean=MEANS['cifar100'], std=STDS['cifar100'])
         transform_test = transforms.Compose([transforms.ToTensor(), normalize])
         val_dataset = datasets.CIFAR100(args.data_dir, train=False, transform=transform_test)
@@ -428,7 +429,7 @@ def condense(args, logger, device='cuda'):
     if not args.test:
         synset.test(args, val_loader, logger, aim_run=run, step=0, context=f"ipc{args.ipc}")
         # if use_reg_flag and (args.ipc <= 10) and (args.factor < 3):  # test for the regularized ipc version
-        #     for ipcx in set(args.regularize + args.adaptive_reg_list):
+        #     for ipcx in set(args.adaptive_reg_list):
         #         ipcx_index_class = ipcx_index_class_dict[ipcx]
         #         synset.test(args, val_loader, logger, ipcx=-1, indices=ipcx_index_class, aim_run=run, step=0, context=f"ipc{ipcx}")
 
@@ -484,10 +485,6 @@ def condense(args, logger, device='cuda'):
                 if use_reg_flag:
                     regularizer_list[c].update_status(init_loop)   # update regularizer status
                     freeze_ipc_list[c] = regularizer_list[c].get_freeze_ipc()
-
-                    # Logging
-                    if  (model_loop == 0) and (init_loop % it_log == 0) and (not args.test):
-                        logger(f"(Iter: {init_loop}, class {c}: reg_ipc: {str(regularizer_list[c].get_regularized_ipc())}, freeze_ipc: {freeze_ipc_list[c]}")
 
                     if freeze_ipc_list[c] > 0: # freeze the ipcx
                         freeze_ipc_idx = ipcx_index_class_dict[freeze_ipc_list[c]]
@@ -563,13 +560,9 @@ def condense(args, logger, device='cuda'):
                     cur_loss = torch.round(cur_loss/args.nclass_sub/args.inner_loop, decimals=2).tolist()
 
                 regularizer_list[c].stats["cur_loss"] = cur_loss
-                logger(f"reg_loss: {cur_loss}")
-                run.track(Text(f"{cur_loss}"), name="loss", step = init_loop+1, context={"subset": "cur_loss"})
 
                 # update reg ipcx status
                 ipcx_list = select_reg_ipc(args, regularizer_list[c], init_loop+1, logger=logger, aim_run=run)
-                run.track(Text(f"Reg ipc: {ipcx_list}"), name="regularized_ipc", step=init_loop+1, context={"subset": f"class_{c}"})
-                logger(f"Reg ipc (class {c}): {ipcx_list}")
                 regularizer_list[c].update_ipc_prev_list()  # Clear prev list
 
                 for ipcx in ipcx_list:
@@ -600,7 +593,7 @@ def condense(args, logger, device='cuda'):
             if not args.test:
                 synset.test(args, val_loader, logger, aim_run=run, step=init_loop+1, context=f"ipc{args.ipc}")
                 if args.adaptive_reg and (args.ipc <= 10) and (args.factor < 3):  # test for the regularized ipc version
-                    for ipcx in set(args.regularize + args.adaptive_reg_list):
+                    for ipcx in set(args.adaptive_reg_list):
                         ipcx_index_class = ipcx_index_class_dict[ipcx]
                         synset.test(args, val_loader, logger, ipcx=-1, indices=ipcx_index_class, aim_run=run, step=init_loop+1, context=f"ipc{ipcx}")
 
